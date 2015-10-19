@@ -4,6 +4,7 @@ import mailconfig
 import smtplib
 import shutil
 from os import remove
+import glob
 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -33,8 +34,8 @@ def send_sms(body, phone, subject_prefix, gw_port, filename):
         shutil.copy(filename, mailconfig.archive)
         remove(filename)
 
-    except Exception:
-        print "Error: unable to send email"
+    except Exception, e:
+        print "Error: unable to send email\n Error: " + str(e)
 
 
 # convert sms file to phone and sms message
@@ -51,19 +52,18 @@ def create_msg(text):
     return res[1], phone, gw_port
 
 
-# list sms files
-import glob
+if name == "__main__":
+    # list sms files
+    for filename in glob.glob(dwgconfig.income_path + '*'):
+        subject_prefix = "SMS"
+        txt = open(filename)
+        body, phone, gw_port = create_msg(txt.read())
+        send_sms(body, phone, subject_prefix, gw_port, filename)
 
-for filename in glob.glob(dwgconfig.income_path + '*'):
-    subject_prefix = "SMS"
-    txt = open(filename)
-    body, phone, gw_port = create_msg(txt.read())
-    send_sms(body, phone, subject_prefix, gw_port, filename)
 
-
-for filename in glob.glob(dwgconfig.ussd_income_path + '*'):
-    subject_prefix = "USSD"
-    txt = open(filename)
-    body, phone, gw_port = create_msg(txt.read())
-    send_sms(body, phone, subject_prefix, gw_port, filename)
+    for filename in glob.glob(dwgconfig.ussd_income_path + '*'):
+        subject_prefix = "USSD"
+        txt = open(filename)
+        body, phone, gw_port = create_msg(txt.read())
+        send_sms(body, phone, subject_prefix, gw_port, filename)
 
